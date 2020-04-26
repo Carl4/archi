@@ -1,0 +1,5 @@
+delimiters "^", "^"
+
+import "rst-modelreport.stg"
+import "rst-frame.stg"
+import "rst-sphinx-conf.stg"

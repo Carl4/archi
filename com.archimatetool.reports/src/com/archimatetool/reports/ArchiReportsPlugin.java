@@ -14,6 +14,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.archimatetool.reports.html.HTMLReportExporter;
+import com.archimatetool.reports.rst.RSTReportExporter;
 
 /**
  * Activator
@@ -42,6 +43,12 @@ public class ArchiReportsPlugin extends AbstractUIPlugin {
     public void stop(BundleContext context) throws Exception {
         try {
             HTMLReportExporter.cleanPreviewFiles();
+        }
+        catch(Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            RSTReportExporter.cleanPreviewFiles();
         }
         catch(Exception ex) {
             ex.printStackTrace();
