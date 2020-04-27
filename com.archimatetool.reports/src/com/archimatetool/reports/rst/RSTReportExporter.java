@@ -265,6 +265,7 @@ public class RSTReportExporter {
         stModel.add("motivationFolder", fModel.getFolder(FolderType.MOTIVATION)); //$NON-NLS-1$
         stModel.add("implementationFolder", fModel.getFolder(FolderType.IMPLEMENTATION_MIGRATION)); //$NON-NLS-1$
         stModel.add("otherFolder", fModel.getFolder(FolderType.OTHER)); //$NON-NLS-1$
+        stModel.add("userFolder", fModel.getFolder(FolderType.USER)); //$NON-NLS-1$
         stModel.add("relationsFolder", fModel.getFolder(FolderType.RELATIONS)); //$NON-NLS-1$
         stModel.add("viewsFolder", fModel.getFolder(FolderType.DIAGRAMS)); //$NON-NLS-1$
         

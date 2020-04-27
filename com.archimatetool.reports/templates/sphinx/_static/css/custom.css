@@ -11,4 +11,8 @@
     content: " ▼";
 }
 
+.modal {
+   z-index: 201;
+}
+
 @include('model.css')

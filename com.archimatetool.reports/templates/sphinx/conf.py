@@ -57,5 +57,13 @@ html_theme = os.environ.get("HTML_THEME", 'sphinx_rtd_theme')
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-def setup(app):
-    app.add_stylesheet('custom.css')
+html_js_files = [
+    'js/hints.js',
+    'js/jquery.modal.min.js'
+]
+
+html_css_files = [
+    'css/jquery.modal.min.css',
+    'css/custom.css',
+    'css/model.css'
+]

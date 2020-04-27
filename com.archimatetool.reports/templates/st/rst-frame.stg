@@ -1,23 +1,23 @@
 expandChildren(children) ::= <<
 ^children:{c |
 ^if(c.ArchimateElement)^
-   * - `^c.Name;format="xml-encode"^ <../elements/^c.ArchimateConcept.Id^.html>`__
-     - `^c.ArchimateConcept.Class.SimpleName^ <../elements/^c.ArchimateConcept.Id^.html>`__
+   * - :ref:`^c.ArchimateConcept.Id^`
+     - :ref:`^c.ArchimateConcept.Class.SimpleName^`
 ^elseif(c.ReferencedModel)^
-   * - `^c.Name;format="xml-encode"^ <../views/^c.ReferencedModel.Id^.html>`__
-     - `^c.ReferencedModel.Viewpoint^ <../views/^c.ReferencedModel.Id^.html>`__
+   * - `^c.Name;format="xml-encode"^` :ref:`^c.ReferencedModel.Id^`
+     - `^c.ReferencedModel.Viewpoint^`
 ^elseif(c.Bounds)^
-^if(c.Name)^
-   * - `Object ^c.Name;format="xml-encode"^ <../objects/^c.Id^.html>`__
+^if(c.Name && !c.Name.Empty)^
+   * - `Object ^c.Name;format="xml-encode"^`
+     - `^c.Class.SimpleName^`  
 ^else^
-   * - `Unnamed Object <../objects/^c.Id^.html>`__
+   * - `Unnamed Object ^c.Id^`
+     - `^c.Class.SimpleName^` 
 ^endif^
-     - `^c.Class.SimpleName^ <../objects/^c.Id^.html>`__ 
 ^endif^
 ^if(c.Children)^
 ^expandChildren(c.Children)^		
 ^endif^
-
 }^
 >>
 
@@ -27,10 +27,10 @@ expandChildrenRel(children) ::= <<
     ^if(c.SourceConnections)^
       ^c.SourceConnections:{r |
         ^if(r.ArchimateConcept)^
-   * - `^r.Name;format="xml-encode"^ <../elements/^r.ArchimateConcept.Id^.html>`__
-     - `^r.ArchimateConcept.Class.SimpleName^ <../elements/^r.ArchimateConcept.Id^.html>`__
-     - `^r.ArchimateConcept.Source.Name;format="xml-encode"^ <../elements/^r.ArchimateConcept.Source.Id^.html>`__
-     - `^r.ArchimateConcept.Target.Name;format="xml-encode"^ <../elements/^r.ArchimateConcept.Target.Id^.html>`__
+   * - `^r.Name;format="xml-encode"^` :ref:`^r.ArchimateConcept.Id^`
+     - `^r.ArchimateConcept.Class.SimpleName^` :ref:`^r.ArchimateConcept.Id^`
+     - `^r.ArchimateConcept.Source.Name;format="xml-encode"^` :ref:`^r.ArchimateConcept.Source.Id^`
+     - `^r.ArchimateConcept.Target.Name;format="xml-encode"^` :ref:`^r.ArchimateConcept.Target.Id^`
         ^endif^
 	  }^
     ^endif^
@@ -38,65 +38,6 @@ expandChildrenRel(children) ::= <<
 ^if(c.Children)^
 ^expandChildrenRel(c.Children)^		
 ^endif^
-}^
->>
-
-expandFolderForQuery(folder) ::= <<
-dataFolders.push({id:"^folder.Id^", type:"^folder.Class.SimpleName^", name:decodeURL("^folder.Name;format="url-encode"^"), documentation:decodeURL("^folder.Documentation;format="url-encode"^")\});
-^folder.Folders:{f |
-	dataFoldersContent.push({folderid:"^folder.Id^", contentid:"^f.Id^", contenttype:"^f.Class.SimpleName^"\});
-	^expandFolderForQuery(f)^
-}^
-^folder.Elements:{c |
-	dataFoldersContent.push({folderid:"^folder.Id^", contentid:"^c.Id^", contenttype:"^c.Class.SimpleName^"\});
-	^if(c.Source)^
-		dataRelationships.push({id:"^c.Id^", type:"^c.Class.SimpleName^", name:decodeURL("^c.Name;format="url-encode"^"), documentation:decodeURL("^c.Documentation;format="url-encode"^"), sourceid:"^c.Source.Id^", targetid:"^c.Target.Id^"\});
-		^c.Properties:{p |
-			dataProperties.push({conceptid:"^c.Id^", propkey:decodeURL("^p.Key;format="url-encode"^"), propvalue:decodeURL("^p.Value;format="url-encode"^")\});
-		}^
-	^elseif(c.ConnectionRouterType)^
-		dataViews.push({id:"^c.Id^", type:"^c.Class.SimpleName^", name:decodeURL("^c.Name;format="url-encode"^"), documentation:decodeURL("^c.Documentation;format="url-encode"^")\});
-		^c.Properties:{p |
-			dataProperties.push({conceptid:"^c.Id^", propkey:decodeURL("^p.Key;format="url-encode"^"), propvalue:decodeURL("^p.Value;format="url-encode"^")\});
-		}^
-		^expandViewElementsForQuery(c, c.Children)^
-		^expandViewRelsForQuery(c, c.Children)^
-	^else^
-		dataElements.push({id:"^c.Id^", type:"^c.Class.SimpleName^", name:decodeURL("^c.Name;format="url-encode"^"), documentation:decodeURL("^c.Documentation;format="url-encode"^")\});
-		^c.Properties:{p |
-			dataProperties.push({conceptid:"^c.Id^", propkey:decodeURL("^p.Key;format="url-encode"^"), propvalue:decodeURL("^p.Value;format="url-encode"^")\});
-		}^
-	^endif^
-}^
->>
-
-expandViewElementsForQuery(view, children) ::= <<
-^children:{c |
-	^if(c.ArchimateElement)^
-		dataViewsContent.push({viewid:"^view.Id^", contentid:"^c.ArchimateElement.Id^", contenttype:"^c.ArchimateElement.Class.SimpleName^"\});
-	^elseif(c.ReferencedModel)^
-		dataViewsContent.push({viewid:"^view.Id^", contentid:"^c.ReferencedModel.Id^", contenttype:"^c.ReferencedModel.Class.SimpleName^"\});
-	^endif^
-	^if(c.Children)^
-		^expandViewElementsForQuery(view, c.Children)^		
-	^endif^
-}^
->>
-
-expandViewRelsForQuery(view, children) ::= <<
-^children:{c |
-	^if(c.ArchimateElement)^
-		^if(c.SourceConnections)^
-			^c.SourceConnections:{r |
-				^if(r.ArchimateConcept)^
-					dataViewsContent.push({viewid:"^view.Id^", contentid:"^r.ArchimateConcept.Id^", contenttype:"^r.ArchimateConcept.Class.SimpleName^"\});
-				^endif^
-			}^
-		^endif^
-	^endif^
-	^if(c.Children)^
-		^expandViewRelsForQuery(view, c.Children)^		
-	^endif^
 }^
 >>
 
@@ -119,6 +60,7 @@ expandAreasForChildren(children) ::= <<
 bounds(c, pos) ::= "^map.(c.Id).(pos)^"
 
 frame(element, map) ::= <<
+.. _^element.Id^:
 
 ^if(element.Name && element.Name.Empty)^
 ^element.Class.SimpleName^
@@ -127,32 +69,22 @@ frame(element, map) ::= <<
 ^else^
 ^element.Name;format="xml-encode"^
 ==================================
+
 ^endif^
-
 ^if(element.Viewpoint)^
-   (^element.Viewpoint^)
-
-.. note::
-
-   Viewpoint hint here.
+:term:`viewpoint_^element.Viewpoint^`
 
 ^elseif(!element.Purpose)^
-	(^element.Class.Name^)
-
-.. note:: 
-
-	(^element.Class.Name^ hint here)
+(:term:`^element.Class.SimpleName^`)
    
 ^endif^
 	
-
 ^if(element.Children && !element.Bounds)^
 .. image:: ../images/^element.Id^.*
    :alt: ^element.Name^
 
 .. Image maps aren't supported yet . . . 
 .. :usemap: #^element.Id^map
-
 ^expandAreasForChildren(element.Children)^
 
 ^endif^
@@ -161,14 +93,14 @@ frame(element, map) ::= <<
 Element Links
 -------------
 
-Source: `^element.Source.Name;format="xml-encode"^ <../elements/^element.Source.Id^.html>`__
-Target: `^element.Target.Name;format="xml-encode"^ <../elements/^element.Target.Id^.html>`__
+Source: `^element.Source.Name;format="xml-encode"^ :ref:`^element.Source.Id^`
+Target: `^element.Target.Name;format="xml-encode"^ :ref:`^element.Target.Id^`
 
 ^endif^
 
 ^if(element.Properties)^
 Element Properties
-----------------
+------------------
 
 .. list-table:: Element Properties
    :header-rows: 1
