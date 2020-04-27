@@ -23,18 +23,18 @@ expandChildren(children) ::= <<
 
 expandChildrenRel(children) ::= <<
 ^children:{c |
-  ^if(c.ArchimateElement)^
-    ^if(c.SourceConnections)^
-      ^c.SourceConnections:{r |
-        ^if(r.ArchimateConcept)^
-   * - `^r.Name;format="xml-encode"^` :ref:`^r.ArchimateConcept.Id^`
-     - `^r.ArchimateConcept.Class.SimpleName^` :ref:`^r.ArchimateConcept.Id^`
-     - `^r.ArchimateConcept.Source.Name;format="xml-encode"^` :ref:`^r.ArchimateConcept.Source.Id^`
-     - `^r.ArchimateConcept.Target.Name;format="xml-encode"^` :ref:`^r.ArchimateConcept.Target.Id^`
-        ^endif^
-	  }^
-    ^endif^
-  ^endif^
+^if(c.ArchimateElement)^
+^if(c.SourceConnections)^
+^c.SourceConnections:{r |
+^if(r.ArchimateConcept)^
+   * - :ref:`^r.ArchimateConcept.Id^`
+     - :ref:`^r.ArchimateConcept.Class.SimpleName^`
+     - :ref:`^r.ArchimateConcept.Source.Id^`
+     - :ref:`^r.ArchimateConcept.Target.Id^`
+^endif^
+}^
+^endif^
+^endif^
 ^if(c.Children)^
 ^expandChildrenRel(c.Children)^		
 ^endif^
@@ -82,10 +82,16 @@ frame(element, map) ::= <<
 ^if(element.Children && !element.Bounds)^
 .. image:: ../images/^element.Id^.*
    :alt: ^element.Name^
+   :usemap: #^element.Id^map
 
 .. Image maps aren't supported yet . . . 
 .. :usemap: #^element.Id^map
-^expandAreasForChildren(element.Children)^
+
+.. raw:: html
+
+   <map id="^element.Id^map">
+   ^expandAreasForChildren(element.Children)^
+   </map>
 
 ^endif^
 
@@ -93,8 +99,8 @@ frame(element, map) ::= <<
 Element Links
 -------------
 
-Source: `^element.Source.Name;format="xml-encode"^ :ref:`^element.Source.Id^`
-Target: `^element.Target.Name;format="xml-encode"^ :ref:`^element.Target.Id^`
+Source: :ref:`^element.Source.Id^`
+Target: :ref:`^element.Target.Id^`
 
 ^endif^
 
@@ -124,7 +130,9 @@ Element Children
      - Type
 ^expandChildren(element.Children)^
 
-.. list-table:: Children
+Reference Children
+------------------
+.. list-table:: Reference Children
    :header-rows: 1
    
    * - Name

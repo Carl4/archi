@@ -60,10 +60,10 @@ public class SVGExportProvider extends AbstractExportProvider implements IPrefer
         // Get the outer bounds of the figure
         Rectangle bounds = getViewportBounds(fFigure);
 
-        // Create a Graphiti wrapper adapter
+        // Create a Graphiti wrapper adapter (does this pretend to be a graphics adapter?)
         GraphicsToGraphics2DAdaptor graphicsAdaptor = createGraphicsToGraphics2DAdaptor(svgGenerator, bounds);
         
-        // Paint the figure onto the graphics instance
+        // Paint the figure onto the graphics instance (And this paints?)
         fFigure.paint(graphicsAdaptor);
         
         // Get the Element root from the SVGGraphics2D instance

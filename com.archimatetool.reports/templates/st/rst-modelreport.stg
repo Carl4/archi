@@ -11,7 +11,7 @@ expandFolder(folder, target) ::= <<
 }^
 >>
 
-modelreport(model, strategyFolder, businessFolder, applicationFolder, technologyFolder, motivationFolder, implementationFolder, otherFolder, userFolder, relationsFolder, viewsFolder) ::= <<
+modelreport(model, strategyFolder, businessFolder, applicationFolder, technologyFolder, motivationFolder, implementationFolder, otherFolder, relationsFolder, viewsFolder) ::= <<
 ..  ^model.Name^ documentation master file, created by Archimate report rst plugin.
 
 ^model.Name^

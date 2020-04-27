@@ -54,6 +54,7 @@ import com.archimatetool.editor.ui.services.EditorManager;
 import com.archimatetool.editor.utils.FileUtils;
 import com.archimatetool.editor.utils.PlatformUtils;
 import com.archimatetool.editor.utils.StringUtils;
+import com.archimatetool.export.svg.SVGExportProvider;
 import com.archimatetool.model.FolderType;
 import com.archimatetool.model.IArchimateConcept;
 import com.archimatetool.model.IArchimateModel;
@@ -265,7 +266,7 @@ public class RSTReportExporter {
         stModel.add("motivationFolder", fModel.getFolder(FolderType.MOTIVATION)); //$NON-NLS-1$
         stModel.add("implementationFolder", fModel.getFolder(FolderType.IMPLEMENTATION_MIGRATION)); //$NON-NLS-1$
         stModel.add("otherFolder", fModel.getFolder(FolderType.OTHER)); //$NON-NLS-1$
-        stModel.add("userFolder", fModel.getFolder(FolderType.USER)); //$NON-NLS-1$
+//        stModel.add("userFolder", fModel.getFolder(FolderType.USER)); //$NON-NLS-1$
         stModel.add("relationsFolder", fModel.getFolder(FolderType.RELATIONS)); //$NON-NLS-1$
         stModel.add("viewsFolder", fModel.getFolder(FolderType.DIAGRAMS)); //$NON-NLS-1$
         
@@ -375,7 +376,9 @@ public class RSTReportExporter {
         }
         
         // Save images
-        saveImages(imagesFolder, diagramModels);
+        savePngImages(imagesFolder, diagramModels);
+        // This doesn't (yet) work...
+        //        saveSvgImages(imagesFolder, diagramModels);
         
         setProgressSubTask(Messages.RSTReportExporter_11, true);
 
@@ -409,7 +412,7 @@ public class RSTReportExporter {
      * @param diagramModels 
      * @throws IOException 
      */
-    private void saveImages(File imagesFolder, List<IDiagramModel> diagramModels) throws IOException {
+    private void savePngImages(File imagesFolder, List<IDiagramModel> diagramModels) throws IOException {
         // Use this to generate unique name for image file
         Hashtable<IDiagramModel, String> nameTable = new Hashtable<IDiagramModel, String>();
         
@@ -448,6 +451,82 @@ public class RSTReportExporter {
             bounds.performScale(ImageFactory.getImageDeviceZoom() / 100); // Account for device zoom level
             diagramBoundsMap.put(dm, bounds);
 
+            // ImageLoader only works for rasters. I want an SVG.
+            try {
+                ImageLoader loader = new ImageLoader();
+                loader.data = new ImageData[] { image.getImageData(ImageFactory.getImageDeviceZoom()) };
+                File file = new File(imagesFolder, diagramName);
+                loader.save(file.getAbsolutePath(), SWT.IMAGE_PNG);
+            }
+            finally {
+                image.dispose();
+            }
+            
+            /* Supposing we copy off the svg exporter, there's no good way to set the id of a group in the
+             * output file.  I think the only reasonable approach is to render the svg, then use the map 
+             * generation techniques to lay a set of <a href> rectangles over top of the svg content. 
+            */
+            
+        }
+    }
+
+    /**
+     * Save diagram images
+     * @param diagramModels 
+     * @throws IOException 
+     */
+    private void saveSvgImages(File imagesFolder, List<IDiagramModel> diagramModels) throws IOException {
+        /* Supposing we copy off the svg exporter, there's no good way to set the id of a group in the
+         * output file.  I think the only reasonable approach is to render the svg, then use the map 
+         * generation techniques to lay a set of <a href> rectangles over top of the svg content. 
+        */
+
+    	
+        // Use this to generate unique name for image file
+        Hashtable<IDiagramModel, String> nameTable = new Hashtable<IDiagramModel, String>();
+        
+        int nameCount = 1;
+        int total = diagramModels.size();
+        int i = 1;
+        
+        for(IDiagramModel dm : diagramModels) {
+            setProgressSubTask(NLS.bind(Messages.RSTReportExporter_4, i++, total), true);
+
+            ModelReferencedImage geoImage = DiagramUtils.createModelReferencedImage(dm, 1, 10);
+            Image image = geoImage.getImage();
+            
+            // Generate file name
+            String diagramName = dm.getId();
+            if(StringUtils.isSet(diagramName)) {
+                // removed this because ids can have hyphens in them (when imported from TOG format)
+                // Let's hope that ids are filename friendly...
+                //diagramName = FileUtils.getValidFileName(diagramName);
+                
+                int j = 2;
+                String s = diagramName + ".svg";  //$NON-NLS-1$
+                while(nameTable.containsValue(s)) {
+                    s = diagramName + "_" + j++ + ".svg"; //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                diagramName = s;
+            }
+            else {
+                diagramName = Messages.RSTReportExporter_1 + " " + nameCount++ + ".svg";  //$NON-NLS-1$//$NON-NLS-2$
+            }
+
+            nameTable.put(dm, diagramName);
+          
+
+            // Get and store the bounds of the top-left element in the figure to act as overall x,y offset
+            Rectangle bounds = geoImage.getBounds();
+            bounds.performScale(ImageFactory.getImageDeviceZoom() / 100); // Account for device zoom level
+            diagramBoundsMap.put(dm, bounds);
+
+            // process the children for bounds . . . 
+            for(IDiagramModelObject dmo: dm.getChildren() ) {
+                addNewBounds(dmo, bounds.x * -1, bounds.y * -1);
+            }
+            
+            // ImageLoader only works for rasters. I want an SVG.
             try {
                 ImageLoader loader = new ImageLoader();
                 loader.data = new ImageData[] { image.getImageData(ImageFactory.getImageDeviceZoom()) };
@@ -459,6 +538,7 @@ public class RSTReportExporter {
             }
         }
     }
+
     
     private void updateProgress() throws IOException {
         if(progressMonitor != null && PlatformUI.isWorkbenchRunning() && Display.getCurrent() != null) {

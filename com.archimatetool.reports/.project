@@ -3,6 +3,7 @@
 	<name>com.archimatetool.reports</name>
 	<comment></comment>
 	<projects>
+		<project>com.archimatetool.export.svg</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
