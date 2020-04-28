@@ -17,6 +17,17 @@ Bundle-ClassPath: com.archimatetool.reports.jar,
  lib/antlr-runtime-4.4.jar
 Bundle-Activator: com.archimatetool.reports.ArchiReportsPlugin
 Bundle-ActivationPolicy: lazy
-Export-Package: com.archimatetool.reports,
- com.archimatetool.reports.html
+Export-Package: com.archimatetool.reports;uses:="org.osgi.framework,org.eclipse.ui,org.eclipse.ui.plugin",
+ com.archimatetool.reports.html;
+  uses:="com.archimatetool.model,
+   org.eclipse.osgi.util,
+   org.eclipse.core.runtime,
+   com.archimatetool.editor.actions,
+   org.eclipse.core.commands",
+ com.archimatetool.reports.rst;
+  uses:="com.archimatetool.model,
+   org.eclipse.core.runtime,
+   org.eclipse.osgi.util,
+   com.archimatetool.editor.actions,
+   org.eclipse.core.commands"
 Automatic-Module-Name: com.archimatetool.reports

@@ -21,6 +21,23 @@ public class Messages extends NLS {
     public static String HTMLReportProvider_6;
 
     public static String HTMLReportProvider_7;
+
+    public static String RSTReportProvider_0;
+
+    public static String RSTReportProvider_1;
+
+    public static String RSTReportProvider_2;
+
+    public static String RSTReportProvider_3;
+
+    public static String RSTReportProvider_4;
+
+    public static String RSTReportProvider_5;
+
+    public static String RSTReportProvider_6;
+
+    public static String RSTReportProvider_7;
+    
     static {
         // initialize resource bundle
         NLS.initializeMessages(BUNDLE_NAME, Messages.class);
