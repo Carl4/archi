@@ -235,10 +235,14 @@ public class RSTReportExporter {
         File objectsFolder = new File(targetFolder, fModel.getId() + "/objects"); //$NON-NLS-1$
         objectsFolder.mkdirs(); // Make dir
 
+        File foldersFolder = new File(targetFolder, fModel.getId() + "/folders"); //$NON-NLS-1$
+        foldersFolder.mkdirs(); // Make dir
+
         // Instantiate templates files
         File mainFile = new File(ArchiReportsPlugin.INSTANCE.getTemplatesFolder(), "st/rst-main.stg"); //$NON-NLS-1$
         STGroupFile groupFile = new STGroupFile(mainFile.getAbsolutePath(), '^', '^');
         ST stFrame = groupFile.getInstanceOf("frame"); //$NON-NLS-1$
+        ST stFolder = groupFile.getInstanceOf("folderfile"); //$NON-NLS-1$
         
         groupFile.registerRenderer(String.class, new StringRenderer());
         
@@ -246,7 +250,7 @@ public class RSTReportExporter {
         writeElement(new File(elementsFolder, "model.rst"), stFrame, fModel); //$NON-NLS-1$
         
         // Write all folders
-        writeFolders(elementsFolder, stFrame, fModel.getFolders());
+        writeFolders(foldersFolder, elementsFolder, stFrame, stFolder, fModel.getFolders());
         
         // Write other graphical objects
         writeGraphicalObjects(objectsFolder, stFrame);
@@ -266,7 +270,6 @@ public class RSTReportExporter {
         stModel.add("motivationFolder", fModel.getFolder(FolderType.MOTIVATION)); //$NON-NLS-1$
         stModel.add("implementationFolder", fModel.getFolder(FolderType.IMPLEMENTATION_MIGRATION)); //$NON-NLS-1$
         stModel.add("otherFolder", fModel.getFolder(FolderType.OTHER)); //$NON-NLS-1$
-//        stModel.add("userFolder", fModel.getFolder(FolderType.USER)); //$NON-NLS-1$
         stModel.add("relationsFolder", fModel.getFolder(FolderType.RELATIONS)); //$NON-NLS-1$
         stModel.add("viewsFolder", fModel.getFolder(FolderType.DIAGRAMS)); //$NON-NLS-1$
         
@@ -309,23 +312,43 @@ public class RSTReportExporter {
 
     /**
      * Write all folders
+     * 
+     * TODO: For RST, The Folders of objects need to each have their own rst page generated and linked 
+     * into the toc of the parent folder.  
      */
-    private void writeFolders(File elementsFolder, ST stFrame, List<IFolder> folders) throws IOException {
+    private void writeFolders(File foldersFolder, File elementsFolder, ST stFrame, ST stFolder, List<IFolder> folders) throws IOException {
     	for(IFolder folder : folders) {
-    		writeFolder(elementsFolder, stFrame, folder);
+    		writeFolder(foldersFolder, elementsFolder, stFrame, stFolder, folder);
     	}
     }
     
     /**
      * Write a single folder
+     * 
+     * This should generate a rst file which references all the elements within the folder.
      */
-    private void writeFolder(File elementsFolder, ST stFrame, IFolder folder) throws IOException {
-    	writeElements(elementsFolder, stFrame, folder.getElements());
-    	writeFolders(elementsFolder, stFrame, folder.getFolders());
+    private void writeFolder(File foldersFolder, File elementsFolder, ST stFrame, ST stFolder, IFolder folder) throws IOException {
+    	stFolder.remove("folder"); // $NON-NLS-1$
+    	stFolder.add("folder", folder); //$NON-NLS-1$
+    	
+    	File folderFile = new File(foldersFolder, ((IIdentifier) folder).getId() + ".rst");
+        
+        try(OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(folderFile), "UTF8")) { //$NON-NLS-1$
+            writer.write(stFolder.render());
+        }
+
+        updateProgress();
+
+//    	writeElements(elementsFolder, stFrame, folder.getElements());
+    	writeFolders(foldersFolder, elementsFolder, stFrame, stFolder, folder.getFolders());
     }
     
     /**
      * Write all elements
+     * 
+     * Note: Elements should only have their own .rst file if they are a view.  Those are handled 
+     * in writeDiagrams
+     * 
      */
     private void writeElements(File elementsFolder, ST stFrame, List<EObject> list) throws IOException {
         for(EObject object : list) {
@@ -339,6 +362,8 @@ public class RSTReportExporter {
      * Write a single element
      */
     private void writeElement(File elementFile, ST stFrame, EObject component) throws IOException {
+    	// I don't like this code.  Why are we removing / adding / removing / adding all the time? It's ugly to 
+    	// clean up BEFORE yourself.  Do it after..
         stFrame.remove("element"); //$NON-NLS-1$
         //frame.remove("children");
         stFrame.add("element", component); //$NON-NLS-1$
@@ -451,7 +476,7 @@ public class RSTReportExporter {
             bounds.performScale(ImageFactory.getImageDeviceZoom() / 100); // Account for device zoom level
             diagramBoundsMap.put(dm, bounds);
 
-            // ImageLoader only works for rasters. I want an SVG.
+            // ImageLoader only works for rasters. 
             try {
                 ImageLoader loader = new ImageLoader();
                 loader.data = new ImageData[] { image.getImageData(ImageFactory.getImageDeviceZoom()) };
@@ -461,17 +486,11 @@ public class RSTReportExporter {
             finally {
                 image.dispose();
             }
-            
-            /* Supposing we copy off the svg exporter, there's no good way to set the id of a group in the
-             * output file.  I think the only reasonable approach is to render the svg, then use the map 
-             * generation techniques to lay a set of <a href> rectangles over top of the svg content. 
-            */
-            
         }
     }
 
     /**
-     * Save diagram images
+     * Save diagram images as svgs
      * @param diagramModels 
      * @throws IOException 
      */
@@ -495,7 +514,7 @@ public class RSTReportExporter {
             ModelReferencedImage geoImage = DiagramUtils.createModelReferencedImage(dm, 1, 10);
             Image image = geoImage.getImage();
             
-            // Generate file name
+            // Generate file name, adding indices if necessary
             String diagramName = dm.getId();
             if(StringUtils.isSet(diagramName)) {
                 // removed this because ids can have hyphens in them (when imported from TOG format)
@@ -512,7 +531,6 @@ public class RSTReportExporter {
             else {
                 diagramName = Messages.RSTReportExporter_1 + " " + nameCount++ + ".svg";  //$NON-NLS-1$//$NON-NLS-2$
             }
-
             nameTable.put(dm, diagramName);
           
 
@@ -528,10 +546,12 @@ public class RSTReportExporter {
             
             // ImageLoader only works for rasters. I want an SVG.
             try {
-                ImageLoader loader = new ImageLoader();
-                loader.data = new ImageData[] { image.getImageData(ImageFactory.getImageDeviceZoom()) };
+            	SVGExportProvider svg = new SVGExportProvider();
+            	
+//                ImageLoader loader = new ImageLoader();
+//                loader.data = new ImageData[] { image.getImageData(ImageFactory.getImageDeviceZoom()) };
                 File file = new File(imagesFolder, diagramName);
-                loader.save(file.getAbsolutePath(), SWT.IMAGE_PNG);
+//                loader.save(file.getAbsolutePath(), SWT.IMAGE_PNG);
             }
             finally {
                 image.dispose();

@@ -1,14 +1,5 @@
 expandFolder(folder, target) ::= <<
-^folder.Folders:{f | 
-^expandFolder(f, target)^
-}^
-^folder.Elements:{e |
-^if(e.Source)^
-^model.Id^/^target^s/^e.Id^
-^else^
-^model.Id^/^target^s/^e.Id^
-^endif^
-}^
+^model.Id^/folders/^folder.Id^
 >>
 
 modelreport(model, strategyFolder, businessFolder, applicationFolder, technologyFolder, motivationFolder, implementationFolder, otherFolder, relationsFolder, viewsFolder) ::= <<
@@ -34,8 +25,8 @@ modelreport(model, strategyFolder, businessFolder, applicationFolder, technology
 
 .. toctree:: 
    :maxdepth: 2
-   :caption: Model Elements
-      
+   :caption: Model Element Folders
+
    ^expandFolder(strategyFolder, "element")^
    ^expandFolder(businessFolder, "element")^
    ^expandFolder(applicationFolder, "element")^

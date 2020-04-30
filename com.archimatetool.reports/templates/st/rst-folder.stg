@@ -1,0 +1,123 @@
+expandFolderToc(folder, target) ::= <<
+^folder.Folders:{f | 
+^f.Id^
+}^
+>>
+
+elementTemplate(element) ::= <<
+.. _^element.Id^:
+
+^if(element.Name && element.Name.Empty)^
+^element.Class.SimpleName^
+--------------------------
+
+^else^
+^element.Name;format="xml-encode"^
+----------------------------------
+
+^endif^
+^if(element.Viewpoint)^
+:term:`viewpoint_^element.Viewpoint^`
+
+^elseif(!element.Purpose)^
+(:term:`^element.Class.SimpleName^`)
+   
+^endif^
+    
+^if(element.Children && !element.Bounds)^
+.. image:: ../images/^element.Id^.*
+   :alt: ^element.Name^
+
+^endif^
+
+^if(element.Source)^
+
+Element Links
+\^\^\^\^\^\^\^\^\^\^\^\^\^
+
+Source: :ref:`^element.Source.Id^`
+Target: :ref:`^element.Target.Id^`
+
+^endif^
+
+^if(element.Properties)^
+Element Properties
+\^\^\^\^\^\^\^\^\^\^\^\^\^
+
+.. list-table:: Element Properties
+   :header-rows: 1
+
+   * - Key
+     - Value
+^element.Properties:{p | 
+   * - ^p.Key;format="xml-encode"^
+     - ^p.Value;format="xml-encode"^
+}^
+^endif^
+
+^if(element.Children)^
+Element Children
+\^\^\^\^\^\^\^\^\^\^\^\^\^
+
+.. list-table:: Element Children
+   :header-rows: 1
+
+   * - Name
+     - Type
+^expandChildren(element.Children)^
+
+Reference Children
+\^\^\^\^\^\^\^\^\^\^\^\^\^
+
+.. list-table:: Reference Children
+   :header-rows: 1
+   
+   * - Name
+     - Type
+     - Source
+     - Target
+^expandChildrenRel(element.Children)^
+
+^endif^ 
+
+^if(element.Documentation)^
+Documentation
+\^\^\^\^\^\^\^\^\^\^\^\^\^
+
+^element.Documentation^
+
+^endif^
+
+^if(element.Content)^
+Content
+\^\^\^\^\^\^
+
+^element.Content^
+
+^endif^
+
+>>
+
+expandElements(folder) ::= <<
+^folder.Elements:{e |
+..
+
+^elementTemplate(e)^ 
+}^
+>>
+
+folderfile(folder) ::= <<
+.. _^folder.Id^:
+
+^folder.Name;format="xml-encode"^
+==================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Model Views
+    
+   ^expandFolderToc(folder, "folder")^
+
+^expandElements(folder)^
+
+>>
