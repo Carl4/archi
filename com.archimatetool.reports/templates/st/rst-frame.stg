@@ -82,10 +82,6 @@ frame(element, map) ::= <<
 ^if(element.Children && !element.Bounds)^
 .. image:: ../images/^element.Id^.*
    :alt: ^element.Name^
-   :usemap: #^element.Id^map
-
-.. Image maps aren't supported yet . . . 
-.. :usemap: #^element.Id^map
 
 .. raw:: html
 

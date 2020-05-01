@@ -100,9 +100,10 @@ Content
 
 expandElements(folder) ::= <<
 ^folder.Elements:{e |
-..
-
-^elementTemplate(e)^ 
+^if(e.Viewpoint)^
+^else^
+^elementTemplate(e)^
+^endif^ 
 }^
 >>
 
@@ -114,10 +115,25 @@ folderfile(folder) ::= <<
 
 .. toctree::
    :maxdepth: 2
-   :caption: Model Views
+   :caption: Folders
     
    ^expandFolderToc(folder, "folder")^
 
+
+^if(first(folder.Elements).Viewpoint)^
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Views
+
+^folder.Elements:{e |
+   ../views/^e.Id^
+}^
+^endif^
+
+^if(first(folder.Elements).Viewpoint)^
+^else^
 ^expandElements(folder)^
+^endif^
 
 >>
