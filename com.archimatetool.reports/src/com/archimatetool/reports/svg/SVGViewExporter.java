@@ -49,15 +49,9 @@ public class SVGViewExporter  {
     protected String svgNS = "http://www.w3.org/2000/svg"; //$NON-NLS-1$
     
     /**
-     * Map of new bounds for each diagram for bounds offset
+     * Initialize the View Exporter.  .
+     * @param dm Pass in the IDiagramModel to export as SVG.
      */
-    private Map<IDiagramModel, Rectangle> diagramBoundsMap = new HashMap<IDiagramModel, Rectangle>();
-
-    /**
-     * Map of new bounds for child objects in images for hit areas
-     */
-    private Map<String, BoundsWithAbsolutePosition> childBoundsMap = new HashMap<String, BoundsWithAbsolutePosition>();
-    
     public SVGViewExporter(IDiagramModel dm) {
     	model = dm;
 	}
@@ -74,21 +68,16 @@ public class SVGViewExporter  {
     /**
      * Create a SVGGeneratorContext and set its attributes
      * @param document The DOM Document
-     * @param embeddedFonts If true will embed fonts
      * @return The SVGGeneratorContext
      */
-    protected SVGGeneratorContext createContext(Document document, boolean embedFonts) {
+    protected SVGGeneratorContext createContext(Document document) {
         SVGGeneratorContext ctx = SVGGeneratorContext.createDefault(document);
-        ctx.setEmbeddedFontsOn(embedFonts);
+        ctx.setEmbeddedFontsOn(true);
         ctx.setComment(Messages.SVGExportProvider_1); // Add a comment
         return ctx;
     }
     
-    public void export(File file) throws IOException {
-    	/* This process is pretty similar to DiagramUtils.createModelReferencedImage
-    	 * 
-    	 */
-    
+    private IFigure getFigure() {
         // I want the figure, not the image. . . 
     	//  Based on: ModelReferencedImage geoImage = DiagramUtils.createModelReferencedImage(model, 1, 10);
         Shell shell = new Shell();
@@ -99,12 +88,27 @@ public class SVGViewExporter  {
         IFigure fFigure = layerManager.getLayer(LayerConstants.PRINTABLE_LAYERS);
 
         shell.dispose();
+        return fFigure;
+    }
+
+    /**
+     * Export the diagram we have been initialized with to an SVG file.
+     * @param file a File object to write to
+     * @throws IOException if something goes wrong writing the file.
+     */
+    public void export(File file) throws IOException {
+    	/* This process is pretty similar to DiagramUtils.createModelReferencedImage
+    	 * 
+    	 */
+
+    	// Get this model's figure object.
+    	IFigure fFigure = getFigure();
 
         // Create a DOM Document
         Document document = createDocument();
         
-        // Create a context for customisation // Embed fonts is the boolean.
-        SVGGeneratorContext ctx = createContext(document, true);
+        // Create a context for customisation
+        SVGGeneratorContext ctx = createContext(document);
         
         // Create a Batik SVGGraphics2D instance
         SVGGraphics2D svgGenerator = new SVGGraphics2D(ctx, false);
@@ -121,11 +125,31 @@ public class SVGViewExporter  {
         // Get the Element root from the SVGGraphics2D instance
         Element root = svgGenerator.getRoot();
 
+        // Adds all the SVG Links to the document (on top)
+        aggSvgLinks(document, bounds);
+       
+//        setViewBoxAttribute(root, bounds);
+        root.setAttributeNS(null,  "viewBox",  "-5 -5 " + bounds.width + " " + bounds.height);
+        
+        // Save the root element
+        Writer out = new OutputStreamWriter(new FileOutputStream(file), "UTF-8"); //$NON-NLS-1$
+        svgGenerator.stream(root, out);
+        
+        // Close
+        graphicsAdaptor.dispose();
+        out.close();
+    }
+
+    /**
+     * Add SVG Links to the given document for our model.
+     * @param document The document object where where the links should be added
+     * @param bounds The bounds of the view -- used to compute offsets.
+     */
+    private void aggSvgLinks(Document document, Rectangle bounds) {
         // TODO: Add svg href's here.
         // process the children
         for(IDiagramModelObject dmo: model.getChildren() ) {
         	IBounds dmoBounds = dmo.getBounds();
-//            addNewBounds(dmo, dmoBounds.x * -1, dmoBounds.y * -1);
             Element a = document.createElementNS(svgNS, "a");
             
             // TODO: Need to compute the relative href for the dmo id. How??
@@ -141,23 +165,11 @@ public class SVGViewExporter  {
             rect.setAttribute("stroke", "blue");
             a.appendChild(rect);
             
-            root.appendChild(a);
+            document.appendChild(a);
         }
+	}
 
-       
-//        setViewBoxAttribute(root, bounds);
-        root.setAttributeNS(null,  "viewBox",  "-5 -5 " + bounds.width + " " + bounds.height);
-        
-        // Save the root element
-        Writer out = new OutputStreamWriter(new FileOutputStream(file), "UTF-8"); //$NON-NLS-1$
-        svgGenerator.stream(root, out);
-        
-        // Close
-        graphicsAdaptor.dispose();
-        out.close();
-    }
-
-    /* 
+	/* 
      * These two classes were lovingly recycled from com.archimate.export  
      */
     
@@ -191,23 +203,4 @@ public class SVGViewExporter  {
         return graphicsAdaptor;
     }
 
-
-    /**
-     * Add new bounds for each diagram object in relation to its parent offset x,y
-     */
-    private void addNewBounds(IDiagramModelObject dmo, int offsetX, int offsetY) {
-        // Add new bounds caled to device zoom
-        BoundsWithAbsolutePosition newBounds = new BoundsWithAbsolutePosition(dmo.getBounds(), ImageFactory.getImageDeviceZoom() / 100);
-        newBounds.setOffset(offsetX, offsetY); // Add offset
-        childBoundsMap.put(dmo.getId(), newBounds);
-        
-        // Children
-        if(dmo instanceof IDiagramModelContainer) {
-            for(IDiagramModelObject child: ((IDiagramModelContainer)dmo).getChildren() ) {
-                addNewBounds(child, newBounds.getX1(), newBounds.getY1());
-            }
-        }
-    }
-
-    
 }
