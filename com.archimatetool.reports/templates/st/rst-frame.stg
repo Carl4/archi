@@ -84,10 +84,7 @@ frame(element, map) ::= <<
    :alt: ^element.Name^
 
 .. raw:: html
-
-   <map id="^element.Id^map">
-   ^expandAreasForChildren(element.Children)^
-   </map>
+   :file: ../images/^element.Id^.svg
 
 ^endif^
 

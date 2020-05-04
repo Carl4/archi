@@ -11,12 +11,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGeneratorContext;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.LayerConstants;
 import org.eclipse.gef.editparts.LayerManager;
@@ -28,16 +31,33 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.archimatetool.editor.diagram.util.DiagramUtils;
+import com.archimatetool.editor.ui.ImageFactory;
 import com.archimatetool.export.svg.ExtendedGraphicsToGraphics2DAdaptor;
 import com.archimatetool.export.svg.Messages;
 import com.archimatetool.export.svg.graphiti.GraphicsToGraphics2DAdaptor;
+import com.archimatetool.model.IBounds;
 import com.archimatetool.model.IDiagramModel;
+import com.archimatetool.model.IDiagramModelContainer;
+import com.archimatetool.model.IDiagramModelObject;
+import com.archimatetool.reports.rst.BoundsWithAbsolutePosition;
 
 public class SVGViewExporter  {
     protected IFigure fFigure;
     protected Image image;
     protected IDiagramModel model;
+    
+    protected String svgNS = "http://www.w3.org/2000/svg"; //$NON-NLS-1$
+    
+    /**
+     * Map of new bounds for each diagram for bounds offset
+     */
+    private Map<IDiagramModel, Rectangle> diagramBoundsMap = new HashMap<IDiagramModel, Rectangle>();
 
+    /**
+     * Map of new bounds for child objects in images for hit areas
+     */
+    private Map<String, BoundsWithAbsolutePosition> childBoundsMap = new HashMap<String, BoundsWithAbsolutePosition>();
+    
     public SVGViewExporter(IDiagramModel dm) {
     	model = dm;
 	}
@@ -48,7 +68,6 @@ public class SVGViewExporter  {
      */
     protected Document createDocument() {
         DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
-        String svgNS = "http://www.w3.org/2000/svg"; //$NON-NLS-1$
         return domImpl.createDocument(svgNS, "svg", null); //$NON-NLS-1$
     }
     
@@ -99,10 +118,33 @@ public class SVGViewExporter  {
         // Paint the figure onto the graphics instance (And this paints?)
         fFigure.paint(graphicsAdaptor);
         
-                
         // Get the Element root from the SVGGraphics2D instance
         Element root = svgGenerator.getRoot();
-        
+
+        // TODO: Add svg href's here.
+        // process the children
+        for(IDiagramModelObject dmo: model.getChildren() ) {
+        	IBounds dmoBounds = dmo.getBounds();
+//            addNewBounds(dmo, dmoBounds.x * -1, dmoBounds.y * -1);
+            Element a = document.createElementNS(svgNS, "a");
+            
+            // TODO: Need to compute the relative href for the dmo id. How??
+            EObject container = dmo.eContainer();  // This seems to be the view, not the folder.
+            a.setAttribute("href", "#"+dmo.getId());
+
+            Element rect = document.createElementNS(svgNS, "rect");
+            rect.setAttribute("x", Integer.toString(dmoBounds.getX() - bounds.x));
+            rect.setAttribute("y", Integer.toString(dmoBounds.getY() - bounds.y));
+            rect.setAttribute("width", Integer.toString(dmoBounds.getWidth()));
+            rect.setAttribute("height", Integer.toString(dmoBounds.getHeight()));
+            rect.setAttribute("fill-opacity", "0");
+            rect.setAttribute("stroke", "blue");
+            a.appendChild(rect);
+            
+            root.appendChild(a);
+        }
+
+       
 //        setViewBoxAttribute(root, bounds);
         root.setAttributeNS(null,  "viewBox",  "-5 -5 " + bounds.width + " " + bounds.height);
         
@@ -148,6 +190,24 @@ public class SVGViewExporter  {
         graphicsAdaptor.setAdvanced(true);
         return graphicsAdaptor;
     }
-    
+
+
+    /**
+     * Add new bounds for each diagram object in relation to its parent offset x,y
+     */
+    private void addNewBounds(IDiagramModelObject dmo, int offsetX, int offsetY) {
+        // Add new bounds caled to device zoom
+        BoundsWithAbsolutePosition newBounds = new BoundsWithAbsolutePosition(dmo.getBounds(), ImageFactory.getImageDeviceZoom() / 100);
+        newBounds.setOffset(offsetX, offsetY); // Add offset
+        childBoundsMap.put(dmo.getId(), newBounds);
+        
+        // Children
+        if(dmo instanceof IDiagramModelContainer) {
+            for(IDiagramModelObject child: ((IDiagramModelContainer)dmo).getChildren() ) {
+                addNewBounds(child, newBounds.getX1(), newBounds.getY1());
+            }
+        }
+    }
+
     
 }
