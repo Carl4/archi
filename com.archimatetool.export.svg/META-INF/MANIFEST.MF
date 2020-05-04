@@ -16,5 +16,6 @@ Bundle-ClassPath: com.archimatetool.export.svg.jar,
  lib/fop-transcoder-allinone-2.3.jar,
  lib/xml-apis-ext-1.3.04.jar,
  lib/xmlgraphics-commons-2.3.jar
-Export-Package: com.archimatetool.export.svg
+Export-Package: com.archimatetool.export.svg,
+ com.archimatetool.export.svg.graphiti
 Automatic-Module-Name: com.archimatetool.export.svg

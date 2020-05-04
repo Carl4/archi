@@ -21,8 +21,12 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.gef.GraphicalViewer;
+import org.eclipse.gef.LayerConstants;
+import org.eclipse.gef.editparts.LayerManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -32,8 +36,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
@@ -66,6 +72,7 @@ import com.archimatetool.model.IDiagramModelReference;
 import com.archimatetool.model.IFolder;
 import com.archimatetool.model.IIdentifier;
 import com.archimatetool.reports.ArchiReportsPlugin;
+import com.archimatetool.reports.svg.SVGViewExporter;
 
 
 /**
@@ -84,7 +91,7 @@ public class RSTReportExporter {
     private IArchimateModel fModel;
     
     /**
-     * Map of new bounds for each digram for bounds offset
+     * Map of new bounds for each diagram for bounds offset
      */
     private Map<IDiagramModel, Rectangle> diagramBoundsMap = new HashMap<IDiagramModel, Rectangle>();
     
@@ -403,7 +410,7 @@ public class RSTReportExporter {
         // Save images
         savePngImages(imagesFolder, diagramModels);
         // This doesn't (yet) work...
-        //        saveSvgImages(imagesFolder, diagramModels);
+        saveSvgImages(imagesFolder, diagramModels);
         
         setProgressSubTask(Messages.RSTReportExporter_11, true);
 
@@ -507,20 +514,13 @@ public class RSTReportExporter {
         int nameCount = 1;
         int total = diagramModels.size();
         int i = 1;
-        
+
         for(IDiagramModel dm : diagramModels) {
             setProgressSubTask(NLS.bind(Messages.RSTReportExporter_4, i++, total), true);
-
-            ModelReferencedImage geoImage = DiagramUtils.createModelReferencedImage(dm, 1, 10);
-            Image image = geoImage.getImage();
             
             // Generate file name, adding indices if necessary
             String diagramName = dm.getId();
             if(StringUtils.isSet(diagramName)) {
-                // removed this because ids can have hyphens in them (when imported from TOG format)
-                // Let's hope that ids are filename friendly...
-                //diagramName = FileUtils.getValidFileName(diagramName);
-                
                 int j = 2;
                 String s = diagramName + ".svg";  //$NON-NLS-1$
                 while(nameTable.containsValue(s)) {
@@ -533,28 +533,13 @@ public class RSTReportExporter {
             }
             nameTable.put(dm, diagramName);
           
-
-            // Get and store the bounds of the top-left element in the figure to act as overall x,y offset
-            Rectangle bounds = geoImage.getBounds();
-            bounds.performScale(ImageFactory.getImageDeviceZoom() / 100); // Account for device zoom level
-            diagramBoundsMap.put(dm, bounds);
-
-            // process the children for bounds . . . 
-            for(IDiagramModelObject dmo: dm.getChildren() ) {
-                addNewBounds(dmo, bounds.x * -1, bounds.y * -1);
-            }
-            
             // ImageLoader only works for rasters. I want an SVG.
             try {
-            	SVGExportProvider svg = new SVGExportProvider();
+            	SVGViewExporter svg = new SVGViewExporter(dm);
             	
-//                ImageLoader loader = new ImageLoader();
-//                loader.data = new ImageData[] { image.getImageData(ImageFactory.getImageDeviceZoom()) };
                 File file = new File(imagesFolder, diagramName);
-//                loader.save(file.getAbsolutePath(), SWT.IMAGE_PNG);
-            }
-            finally {
-                image.dispose();
+                svg.export(file);
+            } finally {
             }
         }
     }
