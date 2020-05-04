@@ -95,7 +95,12 @@ public class HTMLReportExporter {
     private IProgressMonitor progressMonitor;
     
     static class CancelledException extends IOException {
-        public CancelledException(String message) {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -1854733672552998075L;
+
+		public CancelledException(String message) {
             super(message);
         }
     }

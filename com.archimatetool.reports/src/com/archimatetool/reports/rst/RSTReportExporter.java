@@ -21,12 +21,8 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.gef.GraphicalViewer;
-import org.eclipse.gef.LayerConstants;
-import org.eclipse.gef.editparts.LayerManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -36,10 +32,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
@@ -60,9 +54,7 @@ import com.archimatetool.editor.ui.services.EditorManager;
 import com.archimatetool.editor.utils.FileUtils;
 import com.archimatetool.editor.utils.PlatformUtils;
 import com.archimatetool.editor.utils.StringUtils;
-import com.archimatetool.export.svg.SVGExportProvider;
 import com.archimatetool.model.FolderType;
-import com.archimatetool.model.IArchimateConcept;
 import com.archimatetool.model.IArchimateModel;
 import com.archimatetool.model.IDiagramModel;
 import com.archimatetool.model.IDiagramModelArchimateObject;
@@ -103,7 +95,12 @@ public class RSTReportExporter {
     private IProgressMonitor progressMonitor;
     
     static class CancelledException extends IOException {
-        public CancelledException(String message) {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 366443371675268698L;
+
+		public CancelledException(String message) {
             super(message);
         }
     }
@@ -320,7 +317,7 @@ public class RSTReportExporter {
     /**
      * Write all folders
      * 
-     * TODO: For RST, The Folders of objects need to each have their own rst page generated and linked 
+     * For RST, The Folders of objects need to each have their own rst page generated and linked 
      * into the toc of the parent folder.  
      */
     private void writeFolders(File foldersFolder, File elementsFolder, ST stFrame, ST stFolder, List<IFolder> folders) throws IOException {
@@ -348,21 +345,6 @@ public class RSTReportExporter {
 
 //    	writeElements(elementsFolder, stFrame, folder.getElements());
     	writeFolders(foldersFolder, elementsFolder, stFrame, stFolder, folder.getFolders());
-    }
-    
-    /**
-     * Write all elements
-     * 
-     * Note: Elements should only have their own .rst file if they are a view.  Those are handled 
-     * in writeDiagrams
-     * 
-     */
-    private void writeElements(File elementsFolder, ST stFrame, List<EObject> list) throws IOException {
-        for(EObject object : list) {
-            if(object instanceof IArchimateConcept) {
-                writeElement(new File(elementsFolder, ((IIdentifier) object).getId() + ".rst"), stFrame, object); //$NON-NLS-1$
-            }
-        }
     }
     
     /**
