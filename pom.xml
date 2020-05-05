@@ -52,7 +52,7 @@
         <module>tests</module>
         
         <!-- For a full product build include the following module -->
-        <!-- <module>com.archimatetool.editor.product</module> -->
+        <module>com.archimatetool.editor.product</module>
     </modules>
 
     <build>
