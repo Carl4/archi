@@ -23,7 +23,7 @@
         </repository>
         <repository>
             <id>github</id>
-            <layout>p2</p2>
+            <layout>p2</layout>
             <url>https://maven.pkg.github.com/Carl4/archi</url>
         </repository>
     </repositories>
