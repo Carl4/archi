@@ -21,11 +21,6 @@
             <layout>p2</layout>
             <url>http://download.eclipse.org/releases/2019-09/</url>
         </repository>
-        <repository>
-            <id>github</id>
-            <layout>p2</layout>
-            <url>https://maven.pkg.github.com/Carl4/archi</url>
-        </repository>
     </repositories>
 
     <modules>
