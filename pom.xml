@@ -139,7 +139,7 @@
     <repository>
       <id>github</id>
       <name>GitHub Packages</name>
-      <url>https://maven.pkg.github.com/carl4/archi</url>
+      <url>https://maven.pkg.github.com/Carl4/archi/</url>
     </repository>
   </distributionManagement>
   </project>
