@@ -32,6 +32,11 @@ jobs:
       run: mvn -B package
       # Generates file in com.archimatetool.editor.product\target\products\
 
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Binaries
+        path: com.archimatetool.editor.product/target/products/
+
     - name: Publish to GitHub Packages Apache Maven
       run: mvn deploy
       #  -Dregistry=https://maven.pkg.github.com/Carl4 -Dtoken=${GITHUB_TOKEN}
