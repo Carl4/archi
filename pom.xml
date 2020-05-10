@@ -135,10 +135,4 @@
 
     </build>
     
-  <distributionManagement>
-    <repository>
-      <id>github</id>
-      <name>GitHub Packages</name>
-    </repository>
-  </distributionManagement>
-  </project>
+</project>
